@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS users (
+    id         SERIAL PRIMARY KEY,
+    joined_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    total_visits INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS tokens (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER REFERENCES users(id),
+    token      VARCHAR(128) NOT NULL,
+    used       BOOLEAN DEFAULT FALSE,
+    joined_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE
+);
