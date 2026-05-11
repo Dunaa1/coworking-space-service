@@ -1,5 +1,7 @@
 import logging
 import os
+import threading
+import time
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify
@@ -75,6 +77,23 @@ def user_visits():
     return jsonify(result)
 
 
+def log_database_output():
+    """Periodically query the database and log results every 30 seconds."""
+    while True:
+        try:
+            with engine.connect() as conn:
+                rows = conn.execute(
+                    text("SELECT DATE(joined_at) AS date, COUNT(*) AS visits FROM tokens GROUP BY DATE(joined_at) ORDER BY date")
+                ).fetchall()
+                result = {str(r[0]): r[1] for r in rows}
+                logger.info("Daily usage: %s", result)
+        except Exception as e:
+            logger.error("Failed to query database: %s", e)
+        time.sleep(30)
+
+
 if __name__ == "__main__":
     logger.info("Starting coworking analytics service on port 5153")
+    t = threading.Thread(target=log_database_output, daemon=True)
+    t.start()
     app.run(host="0.0.0.0", port=5153)
